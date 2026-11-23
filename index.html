@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criptografía RSA</title>
+<style>
+    body {
+        margin: 0;
+        padding: 15px;
+        background: #ebebeb;
+        font-family: Roboto, "Segoe UI", Arial, sans-serif;
+        font-size: 14px;
+        color: #1a1a1a;
+    }
+
+    .cuadro {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: #dbdbdb;
+        padding: 10px 15px 0 15px;
+        box-sizing: border-box;
+    }
+
+    h1 {
+        margin: 0;
+        text-align: center;
+        font-size: 26px;
+    }
+
+    .nombres {
+        margin: 2px 0 0 0;
+        text-align: center;
+    }
+
+    .estado {
+        margin: 10px 15px 0 15px;
+    }
+
+    .pestana {
+        padding: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    input {
+        width: 100%;
+        box-sizing: border-box;
+        height: 28px;
+        padding: 0 8px;
+        border: 2px solid #979da2;
+        border-radius: 6px;
+        background: #f9f9fa;
+        font-family: inherit;
+        font-size: 14px;
+    }
+
+    input[readonly] {
+        background: #f0f0f0;
+    }
+
+    .campo-largo {
+        margin-bottom: 10px;
+    }
+
+    .fila {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    .campo-corto {
+        width: 130px;
+    }
+
+    .botones {
+        margin-left: auto;
+        display: flex;
+        gap: 10px;
+    }
+
+    button {
+        width: 110px;
+        height: 28px;
+        border: none;
+        border-radius: 0;
+        color: white;
+        font-family: inherit;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: wait;
+    }
+
+    .boton-negro {
+        background: black;
+    }
+
+    .boton-negro:hover {
+        background: #333333;
+    }
+
+    .boton-gris {
+        background: #737373;
+    }
+
+    .boton-gris:hover {
+        background: #595959;
+    }
+
+    .error {
+        min-height: 20px;
+        margin: 0 0 5px 0;
+        color: red;
+        white-space: pre-wrap;
+    }
+
+    textarea {
+        width: 100%;
+        box-sizing: border-box;
+        height: 130px;
+        margin-bottom: 10px;
+        padding: 6px 8px;
+        border: none;
+        border-radius: 6px;
+        background: #f9f9fa;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1.4;
+        resize: none;
+    }
+
+    .tabla {
+        height: 220px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #b0b0b0;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        position: sticky;
+        top: 0;
+        background: #f0f0f0;
+        border-bottom: 1px solid #b0b0b0;
+        border-right: 1px solid #d0d0d0;
+        padding: 4px 6px;
+        text-align: left;
+        font-weight: normal;
+    }
+
+    td {
+        padding: 3px 6px;
+        white-space: pre;
+    }
+
+    .barra {
+        display: flex;
+        justify-content: center;
+    }
+
+    .barra button {
+        width: 170px;
+        height: 40px;
+        font-size: 16px;
+    }
+</style>
+</head>
+<body>
+<div class="cuadro">
+    <h1>Criptografía RSA</h1>
+    <p class="nombres">Carlos Pozuelos Mendizabal 25104 &nbsp; y &nbsp; Andrés Castro Morales 25039</p>
+    <p class="estado" id="estado">Cargando Python, espere unos segundos...</p>
+
+    <div class="pestana" id="pestana-encriptar">
+        <div class="campo-largo">
+            <label for="enc-mensaje">Mensaje M</label>
+            <input type="text" id="enc-mensaje" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="fila">
+            <div class="campo-corto">
+                <label for="enc-p">p</label>
+                <input type="text" id="enc-p" autocomplete="off">
+            </div>
+            <div class="campo-corto">
+                <label for="enc-q">q</label>
+                <input type="text" id="enc-q" autocomplete="off">
+            </div>
+            <div class="campo-corto">
+                <label for="enc-e">e</label>
+                <input type="text" id="enc-e" autocomplete="off">
+            </div>
+            <div class="botones">
+                <button class="boton-negro" id="boton-encriptar" disabled>Encriptar</button>
+                <button class="boton-gris" id="boton-limpiar-encriptar">Limpiar</button>
+            </div>
+        </div>
+        <p class="error" id="enc-error"></p>
+        <textarea id="enc-resumen" readonly></textarea>
+        <div class="campo-largo">
+            <label for="enc-cifrado">Mensaje cifrado C</label>
+            <input type="text" id="enc-cifrado" readonly>
+        </div>
+        <div class="tabla">
+            <table>
+                <thead>
+                    <tr><th>Número</th><th>Pareja</th><th>Códigos ASCII</th><th>Bloque m (antes)</th><th>Bloque c (después)</th></tr>
+                </thead>
+                <tbody id="enc-tabla"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="pestana" id="pestana-desencriptar" hidden>
+        <div class="campo-largo">
+            <label for="des-cifrado">Mensaje cifrado C</label>
+            <input type="text" id="des-cifrado" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="fila">
+            <div class="campo-corto">
+                <label for="des-l">Longitud L</label>
+                <input type="text" id="des-l" autocomplete="off">
+            </div>
+            <div class="campo-corto">
+                <label for="des-p">p</label>
+                <input type="text" id="des-p" autocomplete="off">
+            </div>
+            <div class="campo-corto">
+                <label for="des-q">q</label>
+                <input type="text" id="des-q" autocomplete="off">
+            </div>
+            <div class="campo-corto">
+                <label for="des-e">e</label>
+                <input type="text" id="des-e" autocomplete="off">
+            </div>
+            <div class="botones">
+                <button class="boton-negro" id="boton-desencriptar" disabled>Desencriptar</button>
+                <button class="boton-gris" id="boton-limpiar-desencriptar">Limpiar</button>
+            </div>
+        </div>
+        <p class="error" id="des-error"></p>
+        <textarea id="des-resumen" readonly></textarea>
+        <div class="tabla">
+            <table>
+                <thead>
+                    <tr><th>Número</th><th>Bloque c (antes)</th><th>Bloque m (después)</th><th>Códigos ASCII</th><th>Pareja</th></tr>
+                </thead>
+                <tbody id="des-tabla"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="barra">
+        <button class="boton-negro" id="boton-pestana-encriptar">Encriptar</button>
+        <button class="boton-gris" id="boton-pestana-desencriptar">Desencriptar</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/pyodide@314.0.8/pyodide.js"></script>
+<script>
+    const archivos = ["logica.py", "codificacion.py", "validacion.py", "cifrado.py", "web.py"];
+    let funcion_encriptar = null;
+    let funcion_desencriptar = null;
+
+    function elemento(id) {
+        return document.getElementById(id);
+    }
+
+    async function cargar_python() {
+        const pyodide = await loadPyodide();
+        pyodide.FS.mkdirTree("/home/pyodide/rsa_app");
+        pyodide.FS.writeFile("/home/pyodide/rsa_app/__init__.py", "");
+
+        for (const nombre of archivos) {
+            const respuesta = await fetch("rsa_app/" + nombre, { cache: "no-store" });
+            if (!respuesta.ok) {
+                throw new Error("No se encontró rsa_app/" + nombre);
+            }
+            pyodide.FS.writeFile("/home/pyodide/rsa_app/" + nombre, await respuesta.text());
+        }
+
+        pyodide.runPython("from rsa_app.web import ejecutar_encriptar, ejecutar_desencriptar");
+        funcion_encriptar = pyodide.globals.get("ejecutar_encriptar");
+        funcion_desencriptar = pyodide.globals.get("ejecutar_desencriptar");
+    }
+
+    function a_javascript(resultado_python) {
+        const resultado = resultado_python.toJs({ dict_converter: Object.fromEntries });
+        resultado_python.destroy();
+        return resultado;
+    }
+
+    function mostrar_tabla(id, filas) {
+        const cuerpo = elemento(id);
+        cuerpo.innerHTML = "";
+        for (const fila of filas) {
+            const tr = document.createElement("tr");
+            for (const valor of fila) {
+                const td = document.createElement("td");
+                td.textContent = valor;
+                tr.appendChild(td);
+            }
+            cuerpo.appendChild(tr);
+        }
+    }
+
+    function encriptar() {
+        const resultado = a_javascript(funcion_encriptar(
+            elemento("enc-mensaje").value,
+            elemento("enc-p").value,
+            elemento("enc-q").value,
+            elemento("enc-e").value
+        ));
+        elemento("enc-error").textContent = resultado.error;
+        elemento("enc-resumen").value = resultado.resumen;
+        elemento("enc-cifrado").value = resultado.cifrado;
+        mostrar_tabla("enc-tabla", resultado.filas);
+    }
+
+    function desencriptar() {
+        const resultado = a_javascript(funcion_desencriptar(
+            elemento("des-cifrado").value,
+            elemento("des-l").value,
+            elemento("des-p").value,
+            elemento("des-q").value,
+            elemento("des-e").value
+        ));
+        elemento("des-error").textContent = resultado.error;
+        elemento("des-resumen").value = resultado.resumen;
+        mostrar_tabla("des-tabla", resultado.filas);
+    }
+
+    function limpiar_encriptar() {
+        for (const id of ["enc-mensaje", "enc-p", "enc-q", "enc-e", "enc-resumen", "enc-cifrado"]) {
+            elemento(id).value = "";
+        }
+        elemento("enc-error").textContent = "";
+        mostrar_tabla("enc-tabla", []);
+    }
+
+    function limpiar_desencriptar() {
+        for (const id of ["des-cifrado", "des-l", "des-p", "des-q", "des-e", "des-resumen"]) {
+            elemento(id).value = "";
+        }
+        elemento("des-error").textContent = "";
+        mostrar_tabla("des-tabla", []);
+    }
+
+    function mostrar_pestana(nombre) {
+        const es_encriptar = nombre === "encriptar";
+        elemento("pestana-encriptar").hidden = !es_encriptar;
+        elemento("pestana-desencriptar").hidden = es_encriptar;
+        elemento("boton-pestana-encriptar").className = es_encriptar ? "boton-negro" : "boton-gris";
+        elemento("boton-pestana-desencriptar").className = es_encriptar ? "boton-gris" : "boton-negro";
+    }
+
+    elemento("boton-encriptar").addEventListener("click", encriptar);
+    elemento("boton-desencriptar").addEventListener("click", desencriptar);
+    elemento("boton-limpiar-encriptar").addEventListener("click", limpiar_encriptar);
+    elemento("boton-limpiar-desencriptar").addEventListener("click", limpiar_desencriptar);
+    elemento("boton-pestana-encriptar").addEventListener("click", () => mostrar_pestana("encriptar"));
+    elemento("boton-pestana-desencriptar").addEventListener("click", () => mostrar_pestana("desencriptar"));
+
+    cargar_python()
+        .then(() => {
+            elemento("estado").hidden = true;
+            elemento("boton-encriptar").disabled = false;
+            elemento("boton-desencriptar").disabled = false;
+        })
+        .catch((error) => {
+            elemento("estado").style.color = "red";
+            elemento("estado").textContent = "No se pudo cargar Python. Recargue la página. (" + error.message + ")";
+        });
+</script>
+</body>
+</html>
